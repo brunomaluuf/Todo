@@ -6,18 +6,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import java.util.Date;
-
 @Entity
 public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    private Date data;
+    private String data;
     private String descricao;
     private String titulo;
     private boolean concluida;
+    private String person;
 
     // Getters e Setters
     public long getId() {
@@ -28,11 +27,11 @@ public class Task {
         this.id = id;
     }
 
-    public Date getData() {
+    public String getData() {
         return data;
     }
 
-    public void setData(Date data) {
+    public void setData(String data) {
         this.data = data;
     }
 
@@ -58,6 +57,14 @@ public class Task {
 
     public void setConcluida(boolean concluida) {
         this.concluida = concluida;
+    }
+
+    public String getPerson() {
+        return person;
+    }
+
+    public void setPerson(String person) {
+        this.person = person;
     }
 }
 

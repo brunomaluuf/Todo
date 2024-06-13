@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const taskForm = document.getElementById('task-form');
     const taskInput = document.getElementById('task-input');
+    const taskPerson = document.getElementById('task-person');
     const taskDate = document.getElementById('task-date');
     const taskObs = document.getElementById('task-obs');
     const taskList = document.getElementById('task-list');
@@ -19,16 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
         tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
         tasks.forEach(task => {
-            addTaskToDOM(task.text, task.date, task.obs, task.completed);
+            addTaskToDOM(task.text, task.person, task.date, task.obs, task.completed);
         });
     };
 
     // Adicionar tarefa ao DOM
-    const addTaskToDOM = (taskText, taskDate, taskObs, completed = false) => {
+    const addTaskToDOM = (taskText, taskPerson, taskDate, taskObs, completed = false) => {
         const li = document.createElement('li');
         const textSpan = document.createElement('span');
         textSpan.textContent = taskText;
         li.appendChild(textSpan);
+
+        if (taskPerson) {
+            const personSpan = document.createElement('span');
+            personSpan.textContent = ` (Acompanhante: ${taskPerson})`; // Exibir o nome da pessoa
+            personSpan.classList.add('task-person');
+            li.appendChild(personSpan);
+        }
 
         if (completed) {
             li.classList.add('completed');
@@ -36,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (taskDate) {
             const dateSpan = document.createElement('span');
-            dateSpan.textContent = ` (Data: ${formatDate(taskDate)})`;
+            dateSpan.textContent = ` (Data: ${taskDate})`; // Exibir a data como string
             dateSpan.classList.add('task-date');
             li.appendChild(dateSpan);
         }
@@ -112,11 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const tasks = [];
         taskList.querySelectorAll('li').forEach(li => {
             const taskText = li.firstChild.textContent;
+            const taskPerson = li.querySelector('.task-person') ? li.querySelector('.task-person').textContent.replace(' (Acompanhante: ', '').replace(')', '') : '';
             const taskDate = li.querySelector('.task-date') ? li.querySelector('.task-date').textContent.replace(' (Data: ', '').replace(')', '') : '';
             const taskObs = li.querySelector('.task-obs') ? li.querySelector('.task-obs').textContent : '';
             const completed = li.classList.contains('completed');
-            const formattedDate = taskDate.split('/').reverse().join('-'); // Convertendo para o formato YYYY-MM-DD
-            tasks.push({ text: taskText, date: formattedDate, obs: taskObs, completed });
+            tasks.push({ text: taskText, person: taskPerson, date: taskDate, obs: taskObs, completed }); // Manter a data como string
         });
         tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
         localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -128,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
         taskList.innerHTML = '';
         tasks.forEach(task => {
-            addTaskToDOM(task.text, task.date, task.obs, task.completed);
+            addTaskToDOM(task.text, task.person, task.date, task.obs, task.completed);
         });
     };
 
@@ -136,12 +144,14 @@ document.addEventListener('DOMContentLoaded', () => {
     taskForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const taskText = taskInput.value.trim();
-        const taskDateValue = taskDate.value;
+        const taskPersonValue = taskPerson.value.trim();
+        const taskDateValue = taskDate.value.split('-').reverse().join('/'); // Converter data para DD/MM/YYYY
         const taskObsValue = taskObs.value.trim();
         if (taskText !== '') {
-            addTaskToDOM(taskText, taskDateValue, taskObsValue);
+            addTaskToDOM(taskText, taskPersonValue, taskDateValue, taskObsValue);
             saveTasks();
             taskInput.value = '';
+            taskPerson.value = '';
             taskDate.value = '';
             taskObs.value = '';
             taskInput.focus();
