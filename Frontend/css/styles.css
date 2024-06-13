@@ -1,0 +1,114 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#app {
+    max-width: 600px;
+    width: 100%;
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+li {
+    background: #f9f9f9;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column; /* Mudar para column para alinhar itens verticalmente */
+}
+
+li.completed {
+    opacity: 0.5;
+}
+
+li .task-date {
+    margin-top: 5px; /* Espaço entre o texto e a data */
+    font-style: italic;
+    color: #888;
+}
+
+li .task-obs {
+    margin-top: 5px; /* Espaço entre a data e a observação */
+    color: #555;
+    white-space: pre-wrap; /* Preserva quebras de linha */
+    word-wrap: break-word; /* Quebra palavras longas */
+    overflow: hidden;
+    height: 50px; /* Altura inicial */
+    resize: none; /* Desativar redimensionamento manual */
+}
+
+li .btn-group {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px; /* Espaço entre os botões e o texto */
+}
+
+li .btn {
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+li .delete-btn {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+li .delete-btn:hover {
+    background-color: #c82333;
+}
+
+li .complete-btn {
+    background-color: #28a745;
+    color: #fff;
+}
+
+li .complete-btn:hover {
+    background-color: #218838;
+}
+
+li .incomplete-btn {
+    background-color: #ffc107;
+    color: #fff;
+}
+
+li .incomplete-btn:hover {
+    background-color: #e0a800;
+}
+
+
+
+li .expand-btn {
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-left: 5px; /* Espaço entre os botões */
+}
+
+li .expand-btn:hover {
+    background-color: #0056b3;
+}
+
+.footer {
+        background-color: rgba(239, 239, 239, 0.383);
+        color: white;
+        text-align: center;
+        width: 100%;
+        position: fixed;
+        bottom: 0;
+}
