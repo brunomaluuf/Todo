@@ -17,7 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fetchTasks = () => {
         fetch(baseUrl)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(tasks => {
                 taskList.innerHTML = '';
                 tasks.sort((a, b) => new Date(a.data) - new Date(b.data));
@@ -124,7 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             body: JSON.stringify(task)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(task => {
             addTaskToDOM(task.id, task.titulo, task.data, task.descricao, task.concluida);
             taskForm.reset();
@@ -136,7 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(`${baseUrl}/${taskId}`, {
             method: 'DELETE'
         })
-        .then(() => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             taskList.removeChild(taskElement);
         })
         .catch(error => console.error('Erro ao excluir tarefa:', error));
@@ -150,7 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             body: JSON.stringify({ concluida: completed })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(task => {
             taskElement.classList.toggle('completed');
             if (completed) {
