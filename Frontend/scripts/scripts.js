@@ -5,8 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskObs = document.getElementById('task-obs');
     const taskList = document.getElementById('task-list');
 
-    const baseUrl = 'http://localhost:8080/tasks';
-
+    // Função para formatar data para DD/MM/YYYY
     const formatDate = (dateStr) => {
         const date = new Date(dateStr);
         const day = String(date.getDate()).padStart(2, '0');
@@ -15,30 +14,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${day}/${month}/${year}`;
     };
 
-    const fetchTasks = () => {
-        fetch(baseUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(tasks => {
-                taskList.innerHTML = '';
-                tasks.sort((a, b) => new Date(a.data) - new Date(b.data));
-                tasks.forEach(task => {
-                    addTaskToDOM(task.id, task.titulo, task.data, task.descricao, task.concluida);
-                });
-            })
-            .catch(error => console.error('Erro ao buscar tarefas:', error));
+    // Carregar tarefas do localStorage
+    const loadTasks = () => {
+        const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+        tasks.forEach(task => {
+            addTaskToDOM(task.text, task.date, task.obs, task.completed);
+        });
     };
 
-    const addTaskToDOM = (taskId, taskTitle, taskDate, taskObs, completed = false) => {
+    // Adicionar tarefa ao DOM
+    const addTaskToDOM = (taskText, taskDate, taskObs, completed = false) => {
         const li = document.createElement('li');
-        li.className = 'list-group-item d-flex justify-content-between align-items-center';
-        li.dataset.id = taskId;
         const textSpan = document.createElement('span');
-        textSpan.textContent = taskTitle;
+        textSpan.textContent = taskText;
         li.appendChild(textSpan);
 
         if (completed) {
@@ -56,10 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const obsSpan = document.createElement('span');
             obsSpan.textContent = taskObs;
             obsSpan.classList.add('task-obs');
-            obsSpan.style.display = 'block';
+            obsSpan.style.display = 'block'; // Garantir que a observação seja exibida em uma nova linha
             obsSpan.style.overflow = 'hidden';
-            obsSpan.style.height = '50px';
-            obsSpan.style.resize = 'none';
+            obsSpan.style.height = '50px'; // Altura inicial
+            obsSpan.style.resize = 'none'; // Desativar redimensionamento manual
             li.appendChild(obsSpan);
 
             const expandBtn = document.createElement('button');
@@ -84,14 +73,27 @@ document.addEventListener('DOMContentLoaded', () => {
         completeBtn.textContent = completed ? 'Desmarcar' : 'Concluir';
         completeBtn.classList.add(completed ? 'incomplete-btn' : 'complete-btn');
         completeBtn.onclick = () => {
-            toggleTaskCompletion(taskId, !completed, li, completeBtn);
+            li.classList.toggle('completed');
+            if (li.classList.contains('completed')) {
+                taskList.appendChild(li);
+                completeBtn.textContent = 'Desmarcar';
+                completeBtn.classList.remove('complete-btn');
+                completeBtn.classList.add('incomplete-btn');
+            } else {
+                taskList.insertBefore(li, taskList.querySelector('li.completed') || null);
+                completeBtn.textContent = 'Concluir';
+                completeBtn.classList.remove('incomplete-btn');
+                completeBtn.classList.add('complete-btn');
+            }
+            saveTasks();
         };
 
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Excluir';
         deleteBtn.classList.add('delete-btn');
         deleteBtn.onclick = () => {
-            deleteTask(taskId, li);
+            taskList.removeChild(li);
+            saveTasks();
         };
 
         btnGroup.appendChild(completeBtn);
@@ -105,86 +107,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Salvar tarefas no localStorage
+    const saveTasks = () => {
+        const tasks = [];
+        taskList.querySelectorAll('li').forEach(li => {
+            const taskText = li.firstChild.textContent;
+            const taskDate = li.querySelector('.task-date') ? li.querySelector('.task-date').textContent.replace(' (Data: ', '').replace(')', '') : '';
+            const taskObs = li.querySelector('.task-obs') ? li.querySelector('.task-obs').textContent : '';
+            const completed = li.classList.contains('completed');
+            const formattedDate = taskDate.split('/').reverse().join('-'); // Convertendo para o formato YYYY-MM-DD
+            tasks.push({ text: taskText, date: formattedDate, obs: taskObs, completed });
+        });
+        tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        renderTasks();
+    };
+
+    // Renderizar tarefas no DOM
+    const renderTasks = () => {
+        const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        taskList.innerHTML = '';
+        tasks.forEach(task => {
+            addTaskToDOM(task.text, task.date, task.obs, task.completed);
+        });
+    };
+
+    // Manipulador de evento para adicionar nova tarefa
     taskForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const taskTitle = taskInput.value.trim();
+        const taskText = taskInput.value.trim();
         const taskDateValue = taskDate.value;
         const taskObsValue = taskObs.value.trim();
-        if (taskTitle !== '') {
-            const newTask = {
-                titulo: taskTitle,
-                data: taskDateValue,
-                descricao: taskObsValue,
-                concluida: false
-            };
-            addNewTask(newTask);
+        if (taskText !== '') {
+            addTaskToDOM(taskText, taskDateValue, taskObsValue);
+            saveTasks();
+            taskInput.value = '';
+            taskDate.value = '';
+            taskObs.value = '';
+            taskInput.focus();
         }
     });
 
-    const addNewTask = (task) => {
-        fetch(baseUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(task)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(task => {
-            addTaskToDOM(task.id, task.titulo, task.data, task.descricao, task.concluida);
-            taskForm.reset();
-        })
-        .catch(error => console.error('Erro ao adicionar tarefa:', error));
-    };
-
-    const deleteTask = (taskId, taskElement) => {
-        fetch(`${baseUrl}/${taskId}`, {
-            method: 'DELETE'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            taskList.removeChild(taskElement);
-        })
-        .catch(error => console.error('Erro ao excluir tarefa:', error));
-    };
-
-    const toggleTaskCompletion = (taskId, completed, taskElement, completeBtn) => {
-        fetch(`${baseUrl}/${taskId}/concluir`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ concluida: completed })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(task => {
-            taskElement.classList.toggle('completed');
-            if (completed) {
-                taskList.appendChild(taskElement);
-                completeBtn.textContent = 'Desmarcar';
-                completeBtn.classList.remove('complete-btn');
-                completeBtn.classList.add('incomplete-btn');
-            } else {
-                taskList.insertBefore(taskElement, taskList.querySelector('li.completed') || null);
-                completeBtn.textContent = 'Concluir';
-                completeBtn.classList.remove('incomplete-btn');
-                completeBtn.classList.add('complete-btn');
-            }
-        })
-        .catch(error => console.error('Erro ao concluir tarefa:', error));
-    };
-
-    fetchTasks();
+    // Carregar tarefas ao iniciar a aplicação
+    loadTasks();
 });
